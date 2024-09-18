@@ -1,75 +1,21 @@
 import mongoose from "mongoose";
-
-import validator from "validator";
-
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
+import { Request } from "express";
 
-import dotenv from "dotenv";
-
-dotenv.config({ path: "./config.env" });
-
-// const crypto = require('crypto');
-
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Please tell us your name!"],
-    minlength: [3, "Name must be at least 3 characters long"],
-    trim: true,
-  },
-  email: {
-    type: String,
-    required: [true, "please provide your email address"],
-    unique: true,
-    validate: [validator.isEmail, "please provide a valid email address"],
-  },
-  password: {
-    type: String,
-    required: [true, "Please provide a password!"],
-    minlength: 8,
-    select: false,
-  },
-  phone: {
-    type: String,
-    required: [true, "Please provide your phone number"],
-    unique: true,
-  },
-  token: String,
-  active: {
-    type: Boolean,
-    default: true,
-    select: false,
-  },
-});
-
-userSchema.pre(/^find/, function (this: any, next: () => void) {
-  this.find({ active: true });
-  next();
-});
-
-interface IUser extends mongoose.Document {
-  id: Number;
+export interface IUser extends mongoose.Document {
+  id: mongoose.Types.ObjectId;
   name: string;
   email: string;
-  password: string;
-  passwordConfirm: string;
+  password?: string;
+  passwordConfirm?: string;
   phone: string;
   token?: string;
   active: boolean;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
+  createPasswordResetToken(): string;
 }
-
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 12);
-});
-
-userSchema.statics.passwordCorrect = async function (
-  candidatePassword: string,
-
-  userPassword: string
-): Promise<boolean> {
-  return await bcrypt.compare(candidatePassword, userPassword);
-};
 
 interface IUserModel extends mongoose.Model<IUser> {
   passwordCorrect(
@@ -77,6 +23,67 @@ interface IUserModel extends mongoose.Model<IUser> {
     userPassword: string
   ): Promise<boolean>;
 }
+
+const userSchema = new mongoose.Schema<IUser>({
+  name: {
+    type: String,
+    required: [true, "Please tell us your name!"],
+  },
+  email: {
+    type: String,
+    required: [true, "Please provide your email"],
+    unique: true,
+    lowercase: true,
+  },
+  password: {
+    type: String,
+    required: [true, "Please provide a password"],
+    minlength: 8,
+    select: false,
+  },
+  passwordConfirm: {
+    type: String,
+    required: [true, "Please confirm your password"],
+    validate: {
+      validator: function (el: string) {
+        return el === this.password;
+      },
+      message: "Passwords are not the same!",
+    },
+  },
+  phone: {
+    type: String,
+    required: [true, "Please provide your phone number"],
+  },
+  token: String,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
+  passwordResetToken: String,
+  passwordResetExpires: Date,
+});
+
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  console.log({ resetToken }, this.passwordResetToken);
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+  return resetToken;
+};
+
+userSchema.statics.passwordCorrect = async function (
+  candidatePassword: string,
+  userPassword: string
+): Promise<boolean> {
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
 
 const User: IUserModel = mongoose.model<IUser, IUserModel>("User", userSchema);
 

@@ -1,25 +1,23 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 
-interface CustomRequest extends Request {
-  user?: IUser;
-}
+
 import catchAsync from "../utils/catchAsync";
-import User from "../model/userModal";
+import User, {IUser} from "../model/userModal";
 import mongoose, { Document } from "mongoose";
 import Email from "../utils/email";
 import { promisify } from "util";
 
-export interface IUser extends mongoose.Document {
-  id: mongoose.Types.ObjectId;
-  name: string;
-  email: string;
-  password?: string;
-  passwordConfirm?: string;
-  phone: string;
-  token?: string;
-  active: boolean;
-}
+// export interface IUser extends mongoose.Document {
+//   id: mongoose.Types.ObjectId;
+//   name: string;
+//   email: string;
+//   password?: string;
+//   passwordConfirm?: string;
+//   phone: string;
+//   token?: string;
+//   active: boolean;
+// }
 
 const signToken = (id: mongoose.Types.ObjectId): string => {
   if (!process.env.JWT_SECRET) {
@@ -163,6 +161,41 @@ export const protect = catchAsync(
     next();
   }
 );
+
+
+export const forgotPassword = catchAsync(async(req: Request, res: Response, next: NextFunction) => {
+  const user: IUser | null = await User.findOne({ email: req.body.email });
+  
+  if (!user) {
+    return res.status(404).json({
+      status: "fail",
+      message: "User not found",
+    });
+  }
+
+  const resetToken: string = user.createPasswordResetToken(); 
+  await user.save({validateBeforeSave: false});
+
+  const resetURL = `${process.env.FROND_URL}/resetPassword/${resetToken}`;
+
+  try {
+    await new Email(user, resetURL).sendPasswordReset();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Token sent to email!',
+    });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    return res.status(500).json({
+      status: 'fail',
+      message: 'There was an error sending the email. Try again later.'
+    });
+  }
+})
+
 
 export const testroute = (req: any, res: Response, next: NextFunction) => {
   res.status(200).json({

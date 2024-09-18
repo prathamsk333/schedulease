@@ -3,7 +3,7 @@ import { convert } from "html-to-text";
 import pug from "pug";
 import path from "path";
 
-import { IUser } from "../controller/authController";
+import { IUser } from "../model/userModal";
 
 export default class Email {
   to: string;
@@ -14,7 +14,7 @@ export default class Email {
   constructor(user: IUser, url: string) {
     this.to = user.email;
     this.firstName = user.name.split(" ")[0];
-    this.url = url; 
+    this.url = url;
     this.from = `Schedulease <${process.env.EMAIL_FROM}>`;
   }
 
