@@ -71,7 +71,7 @@ export const signup = catchAsync(
     console.log(req.body);
     if (req.body.password !== req.body.passwordConfirm) {
       res.status(400).json({
-        status: "fail",
+        status: "fail",   
         message: "Passwords do not match",
       });
     }

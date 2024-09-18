@@ -15,15 +15,15 @@ export default class Email {
     this.to = user.email;
     this.firstName = user.name.split(" ")[0];
     this.url = url;
-    this.from = `Pratham.S.K <${process.env.EMAIL_FROM}>`;
+    this.from = `Schedulease <${process.env.EMAIL_FROM}>`;
   }
 
   newTransport() {
-    console.log(process.env.NODE_ENV);
-    if (process.env.NODE_ENV === "production") {
+    console.log(process.env.NODE_ENV, process.env.BREVO_HOST, process.env.BREVO_PORT, process.env.SENDINBLUE_USERNAME, process.env.BREVO_PASSWORD)    ;
+    if (process.env.NODE_ENV === "development") {
       return nodemailer.createTransport({
         host: process.env.BREVO_HOST,
-        port: Number(process.env.BREVO_PORT), 
+        port: Number(process.env.BREVO_PORT),
         auth: {
           user: process.env.SENDINBLUE_USERNAME,
           pass: process.env.BREVO_PASSWORD,
@@ -33,7 +33,7 @@ export default class Email {
 
     return nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
-      port: Number(process.env.EMAIL_PORT), 
+      port: Number(process.env.EMAIL_PORT),
       auth: {
         user: process.env.EMAIL_USERNAME,
         pass: process.env.EMAIL_PASSWORD,
@@ -53,15 +53,15 @@ export default class Email {
 
     const mailOptions = {
       from: this.from,
-      to: this.to,      
+      to: this.to,
       subject,
       html,
       text: convert(html),
       attachments: [
         {
-          filename: 's5.png',
-          path: path.join(__dirname, '../views/email/s5.png'),
-          cid: 'logoImage',  
+          filename: "s5.png",
+          path: path.join(__dirname, "../views/email/s5.png"),
+          cid: "logoImage",
         },
       ],
     };
