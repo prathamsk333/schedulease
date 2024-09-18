@@ -79,6 +79,7 @@ export const signup = catchAsync(
       email: req.body.email,
       phone: req.body.phone,
       password: req.body.password,
+      passwordConfirm: req.body.passwordConfirm
     })) as IUser;
 
     const url: string = process.env.FROND_URL || "";
@@ -184,14 +185,15 @@ export const forgotPassword = catchAsync(async(req: Request, res: Response, next
     res.status(200).json({
       status: 'success',
       message: 'Token sent to email!',
-    });
+    }); 
   } catch (err) {
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save({ validateBeforeSave: false });
     return res.status(500).json({
       status: 'fail',
-      message: 'There was an error sending the email. Try again later.'
+      message: 'There was an error sending the email. Try again later.',
+      err
     });
   }
 })
