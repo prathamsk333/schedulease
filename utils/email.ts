@@ -14,12 +14,18 @@ export default class Email {
   constructor(user: IUser, url: string) {
     this.to = user.email;
     this.firstName = user.name.split(" ")[0];
-    this.url = url;
+    this.url = url; 
     this.from = `Schedulease <${process.env.EMAIL_FROM}>`;
   }
 
   newTransport() {
-    console.log(process.env.NODE_ENV, process.env.BREVO_HOST, process.env.BREVO_PORT, process.env.SENDINBLUE_USERNAME, process.env.BREVO_PASSWORD)    ;
+    console.log(
+      process.env.NODE_ENV,
+      process.env.BREVO_HOST,
+      process.env.BREVO_PORT,
+      process.env.SENDINBLUE_USERNAME,
+      process.env.BREVO_PASSWORD
+    );
     if (process.env.NODE_ENV === "development") {
       return nodemailer.createTransport({
         host: process.env.BREVO_HOST,

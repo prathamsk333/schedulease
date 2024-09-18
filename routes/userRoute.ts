@@ -8,3 +8,4 @@ router.post('/login', authController.login);
 router.get('/testRoute', authController.protect, authController.testroute);
 
 export default router;
+    
