@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-
+import crypto from "crypto";
 
 import catchAsync from "../utils/catchAsync";
-import User, {IUser} from "../model/userModal";
+import User, { IUser } from "../model/userModal";
 import mongoose, { Document } from "mongoose";
 import Email from "../utils/email";
 import { promisify } from "util";
@@ -36,6 +36,7 @@ const createSendToken = async (
   const token = signToken(user.id);
 
   user.password = undefined;
+  user.passwordConfirm = undefined;
 
   const newUser: IUser | null = await User.findByIdAndUpdate(user.id, {
     token,
@@ -69,7 +70,7 @@ export const signup = catchAsync(
     console.log(req.body);
     if (req.body.password !== req.body.passwordConfirm) {
       res.status(400).json({
-        status: "fail",   
+        status: "fail",
         message: "Passwords do not match",
       });
     }
@@ -79,7 +80,7 @@ export const signup = catchAsync(
       email: req.body.email,
       phone: req.body.phone,
       password: req.body.password,
-      passwordConfirm: req.body.passwordConfirm
+      passwordConfirm: req.body.passwordConfirm,
     })) as IUser;
 
     const url: string = process.env.FROND_URL || "";
@@ -163,41 +164,67 @@ export const protect = catchAsync(
   }
 );
 
+export const forgotPassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user: IUser | null = await User.findOne({ email: req.body.email });
 
-export const forgotPassword = catchAsync(async(req: Request, res: Response, next: NextFunction) => {
-  const user: IUser | null = await User.findOne({ email: req.body.email });
-  
-  if (!user) {
-    return res.status(404).json({
-      status: "fail",
-      message: "User not found",
-    });
-  }
+    if (!user) {
+      return res.status(404).json({
+        status: "fail",
+        message: "User not found",
+      });
+    }
 
-  const resetToken: string = user.createPasswordResetToken(); 
-  await user.save({validateBeforeSave: false});
-
-  const resetURL = `${process.env.FROND_URL}/resetPassword/${resetToken}`;
-
-  try {
-    await new Email(user, resetURL).sendPasswordReset();
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Token sent to email!',
-    }); 
-  } catch (err) {
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
+    const resetToken: string = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
-    return res.status(500).json({
-      status: 'fail',
-      message: 'There was an error sending the email. Try again later.',
-      err
+
+    const resetURL = `${process.env.FROND_URL}/resetPassword/${resetToken}`;
+
+    try {
+      await new Email(user, resetURL).sendPasswordReset();
+
+      res.status(200).json({
+        status: "success",
+        message: "Token sent to email!",
+      });
+    } catch (err) {
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+      return res.status(500).json({
+        status: "fail",
+        message: "There was an error sending the email. Try again later.",
+        err,
+      });
+    }
+  }
+);
+
+export const resetPassword = catchAsync(async (req, res, next) => {
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  const user: IUser | null = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return res.status(400).json({
+      status: "fail",
+      message: "Token is invalid or has expired",
     });
   }
-})
 
+  user.password = req.body.password;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
+  createSendToken(user, 200, res);
+});
 
 export const testroute = (req: any, res: Response, next: NextFunction) => {
   res.status(200).json({
