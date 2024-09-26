@@ -1,0 +1,3 @@
+# Portfolio initngit add .ngit commit -m first commitngit branch -M mainngit remote add origin https://github.com/prathamsk333/Portfolio.gitngit push -u origin main
+# Portfolio initngit add .ngit commit -m first commitngit branch -M mainngit remote add origin https://github.com/prathamsk333/Portfolio.gitgit push -u origin main
+# Portfolio initngit add .ngit commit -m first commitngit branch -M mainngit remote add origin https://github.com/prathamsk333/Portfolio.git git push -u origin main
