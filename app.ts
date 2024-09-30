@@ -4,6 +4,7 @@ import morgan from "morgan";
 import path from "path";
 import mongoose from "mongoose";
 import userRouter from "./routes/userRoute";
+import appointRouter from './routes/appointRoute';
 
 dotenv.config({ path: "./config.env" });
 const app = express();
@@ -29,5 +30,6 @@ if (process.env.NODE_ENV === "development") {
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/appointments", appointRouter)
 
 export default app;
