@@ -4,7 +4,7 @@ import Appointment from "../model/appointModal";
 
 export const getAllAppoint = catchAsync(async( req, res, next) => {
     const appointments = await Appointment.find();
-    res.status(401).json({
+    res.status(201).json({
         status: "success",
         appointments
       });
