@@ -95,9 +95,7 @@ export const listAppointments = async (req: Request, res: Response) => {
     } else {
       return res.status(400).json({ message: "Invalid filter value" });
     }
-    console.log(userId);
     const participantEntries = await Participant.find({ userID:userId });
-    console.log(participantEntries);
     const appointmentIds = participantEntries.map((p) => p.appointmentId);
 
     const appointments = await Appointment.find({
