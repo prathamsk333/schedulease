@@ -1,15 +1,11 @@
 import mongoose, { Schema, Document } from "mongoose";
-
-interface IParticipant extends Document {
-  name: string;
-  email: string;
-  phone: string;
-  userID: string;
-}
+import User from "./userModal";
+import { IParticipant } from "./participantModal";
 
 interface IAppointment extends Document {
   token: string;
   date: Date;
+  user: mongoose.Schema.Types.ObjectId;
   startTime: Date;
   endTime: Date;
   title: string;
@@ -17,30 +13,19 @@ interface IAppointment extends Document {
   category: "education" | "health" | "work" | "personal";
   mode: "online" | "offline";
   location?: string;
-  participants: IParticipant[];
+  participants: mongoose.Schema.Types.ObjectId[];
 }
-
-const participantSchema = new Schema<IParticipant>({
-  name: {
-    type: String,
-  },
-  email: {
-    type: String,
-  },
-  phone: {
-    type: String,
-  },
-  userID: {
-    type: String,
-  },
-});
 
 const appointmentSchema = new Schema<IAppointment>({
   token: {
     type: String,
     required: true,
   },
-  date: {
+  user: {
+    type: mongoose.Schema.ObjectId,
+    ref: "User",
+  },
+  date: {       
     type: Date,
     required: true,
   },
@@ -73,9 +58,17 @@ const appointmentSchema = new Schema<IAppointment>({
   location: {
     type: String,
   },
-  participants: [participantSchema],
+  participants: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Participant",
+    },
+  ],
 });
 
-const Appointment = mongoose.model<IAppointment>("Appointment", appointmentSchema);
+const Appointment = mongoose.model<IAppointment>(
+  "Appointment",
+  appointmentSchema
+);
 
 export default Appointment;

@@ -74,7 +74,7 @@ Response:
   "filter": "all" | "today" | "week" | "month"
 }
 ```
-
+            
 Response:
 
 ```json
