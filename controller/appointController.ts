@@ -1,7 +1,12 @@
 import catchAsync from "../utils/catchAsync";
-import User from "../model/userModal";
-import Appointment from "../model/appointModal";
+  import Appointment from "../model/appointModal";
 import { Request, Response } from "express";
+
+interface AuthenticatedRequest extends Request {
+  user?: {
+    token: string;
+  };
+}
 import jwt from "jsonwebtoken";
 import Participant from "../model/participantModal";
 
@@ -58,18 +63,20 @@ export const addNewAppointments = catchAsync(async (req, res, next) => {
   } catch (error) {
     console.error(error);
     if (error instanceof Error && error.name === "JsonWebTokenError") {
-      return res.status(401).json({ message: "Invalid token" });
     }
     return res.status(500).json({ message: "Failed to add new appointment" });
   }
 });
 
-export const listAppointments = async (req: Request, res: Response) => {
+export const listAppointments = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { token, filter } = req.body;
     const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 
-    const decoded: any = jwt.verify(token, JWT_SECRET);
+    if (!req.user) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+    const decoded: any = jwt.verify(req.user.token, JWT_SECRET);
     const userId = decoded.id;
 
     const today = new Date();
@@ -85,7 +92,7 @@ export const listAppointments = async (req: Request, res: Response) => {
       endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + 6);
       endDate.setHours(23, 59, 59, 999);
-    } else if (filter === "month") {
+    } else if (filter === "month") {    
       startDate = new Date(today.getFullYear(), today.getMonth(), 1);
       endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
       endDate.setHours(23, 59, 59, 999);
@@ -95,7 +102,7 @@ export const listAppointments = async (req: Request, res: Response) => {
     } else {
       return res.status(400).json({ message: "Invalid filter value" });
     }
-    const participantEntries = await Participant.find({ userID:userId });
+    const participantEntries = await Participant.find({ userID: userId });
     const appointmentIds = participantEntries.map((p) => p.appointmentId);
 
     const appointments = await Appointment.find({

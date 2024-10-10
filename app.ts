@@ -5,9 +5,11 @@ import path from "path";
 import mongoose from "mongoose";
 import userRouter from "./routes/userRoute";
 import appointRouter from './routes/appointRoute';
+import cors from 'cors'
 
 dotenv.config({ path: "./config.env" });
 const app = express();
+app.use(cors())
 
 app.use(express.json());
 //-------------------------DB connection-----------------------------------------//

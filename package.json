@@ -20,6 +20,7 @@
   "homepage": "https://github.com/prathamsk333/SchedulEase#readme",
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/html-to-text": "^9.0.4",
     "@types/jsonwebtoken": "^9.0.6",
