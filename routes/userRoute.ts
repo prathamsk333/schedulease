@@ -5,7 +5,6 @@ const router = Router();
 
 router.post("/signup", authController.signup);
 router.post('/login', authController.login);
-router.get('/testRoute', authController.protect, authController.testroute);
 router.post('/resetPassword', authController.forgotPassword);
 router.patch('/newPassword/:token', authController.resetPassword);
 

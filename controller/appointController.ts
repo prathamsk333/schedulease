@@ -1,5 +1,5 @@
 import catchAsync from "../utils/catchAsync";
-  import Appointment from "../model/appointModal";
+import Appointment from "../model/appointModal";
 import { Request, Response } from "express";
 
 interface AuthenticatedRequest extends Request {
@@ -41,9 +41,10 @@ export const deleteAppoint = catchAsync(async (req, res, next) => {
   });
 });
 
-export const addNewAppointments = catchAsync(async (req, res, next) => {
-  const { token, appointment } = req.body;
+export const addNewAppointments = catchAsync(async (req, res) => {
+  const { appointment } = req.body;
   const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
+  const token = (req as AuthenticatedRequest).user?.token;
 
   if (!token) {
     return res.status(400).json({ message: "Token must be provided" });
@@ -68,10 +69,17 @@ export const addNewAppointments = catchAsync(async (req, res, next) => {
   }
 });
 
-export const listAppointments = async (req: AuthenticatedRequest, res: Response) => {
+export const listAppointments = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
   try {
-    const { token, filter } = req.body;
+    const { filter } = req.params;
     const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
+
+    const token = req.user?.token;
+
+    console.log(req.user);
 
     if (!req.user) {
       return res.status(401).json({ message: "User not authenticated" });
@@ -92,7 +100,7 @@ export const listAppointments = async (req: AuthenticatedRequest, res: Response)
       endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + 6);
       endDate.setHours(23, 59, 59, 999);
-    } else if (filter === "month") {    
+    } else if (filter === "month") {
       startDate = new Date(today.getFullYear(), today.getMonth(), 1);
       endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
       endDate.setHours(23, 59, 59, 999);
@@ -109,11 +117,11 @@ export const listAppointments = async (req: AuthenticatedRequest, res: Response)
       _id: { $in: appointmentIds },
       date: { $gte: startDate, $lte: endDate },
     }).populate("participants");
-
+    console.log(appointments)
     return res.status(200).json({
       status: "success",
       appointments,
-    });
+    }); 
   } catch (error) {
     console.error(error);
     if (error instanceof Error && error.name === "JsonWebTokenError") {
