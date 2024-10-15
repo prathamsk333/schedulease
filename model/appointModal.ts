@@ -1,6 +1,4 @@
 import mongoose, { Schema, Document } from "mongoose";
-import User from "./userModal";
-import { IParticipant } from "./participantModal";
 
 interface IAppointment extends Document {
   token: string;
@@ -13,6 +11,7 @@ interface IAppointment extends Document {
   category: "education" | "health" | "work" | "personal";
   mode: "online" | "offline";
   location?: string;
+  image?: string;
   participants: mongoose.Schema.Types.ObjectId[];
 }
 
@@ -25,7 +24,7 @@ const appointmentSchema = new Schema<IAppointment>({
     type: mongoose.Schema.ObjectId,
     ref: "User",
   },
-  date: {       
+  date: {
     type: Date,
     required: true,
   },
@@ -56,6 +55,9 @@ const appointmentSchema = new Schema<IAppointment>({
     required: true,
   },
   location: {
+    type: String,
+  },
+  image: {
     type: String,
   },
   participants: [

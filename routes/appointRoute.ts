@@ -1,13 +1,40 @@
 import { Router } from "express";
+import multer from "multer";
+import multerS3 from "multer-s3";
+import { S3Client } from "@aws-sdk/client-s3";
 import * as appointController from "../controller/appointController";
-import * as authController from '../controller/authController'
+import * as authController from "../controller/authController";
 
 const router = Router();
 
-router.post('/postAppoint',authController.protect, appointController.postAppoint)
-router.get('/getAllAppoint',authController.protect, appointController.getAllAppoint)
-router.delete('/deleteAppoint/:id',authController.protect, appointController.deleteAppoint)
-router.get('/listAppointments/:filter',authController.protect,appointController.listAppointments) 
-router.post('/addNewAppointments',authController.protect, appointController.addNewAppointments)
+router.post(
+  "/postAppoint",
+  authController.protect,
+  appointController.postAppoint
+);
 
-export default router;      
+router.get(
+  "/getAllAppoint",
+  authController.protect,
+  appointController.getAllAppoint
+);
+
+router.delete(
+  "/deleteAppoint/:id",
+  authController.protect,
+  appointController.deleteAppoint
+);
+
+router.get(
+  "/listAppointments/:filter",
+  authController.protect,
+  appointController.listAppointments
+);
+
+router.post(
+  "/addNewAppointments",
+  authController.protect,
+  appointController.addNewAppointments
+);
+
+export default router;

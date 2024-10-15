@@ -19,7 +19,10 @@ export const getAllAppoint = catchAsync(async (req, res, next) => {
 });
 
 export const postAppoint = catchAsync(async (req, res, next) => {
+  req.body.token = (req as AuthenticatedRequest).user?.token;
+
   const newAppointment = await Appointment.create(req.body);
+  
   res.status(201).json({
     status: "success",
     data: {
@@ -28,7 +31,8 @@ export const postAppoint = catchAsync(async (req, res, next) => {
   });
 });
 
-export const deleteAppoint = catchAsync(async (req, res, next) => {
+
+export const deleteAppoint = catchAsync(async (req, res, next)  => {
   const appointment = await Appointment.findByIdAndDelete(req.params.id);
   if (!appointment) {
     return res

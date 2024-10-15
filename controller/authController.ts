@@ -46,7 +46,7 @@ const createSendToken = async (
     status: "success",
     token,
     data: {
-      newUser,
+      user:newUser,
     },
   });
 };
@@ -159,6 +159,7 @@ export const protect = catchAsync(
     }
 
     req.user = freshUser;
+
     next();
   }
 );
