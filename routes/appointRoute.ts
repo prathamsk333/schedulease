@@ -1,14 +1,17 @@
 import { Router } from "express";
 import multer from "multer";
 import multerS3 from "multer-s3";
-import { S3Client } from "@aws-sdk/client-s3";
 import * as appointController from "../controller/appointController";
 import * as authController from "../controller/authController";
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 const router = Router();
 
 router.post(
   "/postAppoint",
+  upload.single("image"),
   authController.protect,
   appointController.postAppoint
 );

@@ -1,6 +1,15 @@
 import catchAsync from "../utils/catchAsync";
 import Appointment from "../model/appointModal";
 import { Request, Response } from "express";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import dotenv from "dotenv";
+import crypto from "crypto";
+
+dotenv.config({ path: "./config.env" });
+
+const randomImageName = (bytes = 32) => {
+  return crypto.randomBytes(bytes).toString("hex");
+};
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -9,6 +18,20 @@ interface AuthenticatedRequest extends Request {
 }
 import jwt from "jsonwebtoken";
 import Participant from "../model/participantModal";
+
+const accessKey = process.env.AWS_ACCESS_KEY_ID;
+const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+if (!accessKey || !secretAccessKey) {
+  throw new Error("AWS credentials are not defined");
+}
+
+const s3 = new S3Client({
+  credentials: {
+    accessKeyId: accessKey,
+    secretAccessKey: secretAccessKey,
+  },
+  region: process.env.AWS_REGION,
+});
 
 export const getAllAppoint = catchAsync(async (req, res, next) => {
   const appointments = await Appointment.find();
@@ -21,8 +44,22 @@ export const getAllAppoint = catchAsync(async (req, res, next) => {
 export const postAppoint = catchAsync(async (req, res, next) => {
   req.body.token = (req as AuthenticatedRequest).user?.token;
 
+  const imageName = randomImageName();
+
+  const params = {
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: imageName,
+    Body: req.file?.buffer,
+    ContentType: req.file?.mimetype,
+  };
+
+  const command = new PutObjectCommand(params);
+  await s3.send(command);
+  const imageUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${imageName}`;
+  req.body.image = imageUrl;
+
   const newAppointment = await Appointment.create(req.body);
-  
+
   res.status(201).json({
     status: "success",
     data: {
@@ -31,8 +68,7 @@ export const postAppoint = catchAsync(async (req, res, next) => {
   });
 });
 
-
-export const deleteAppoint = catchAsync(async (req, res, next)  => {
+export const deleteAppoint = catchAsync(async (req, res, next) => {
   const appointment = await Appointment.findByIdAndDelete(req.params.id);
   if (!appointment) {
     return res
@@ -121,11 +157,11 @@ export const listAppointments = async (
       _id: { $in: appointmentIds },
       date: { $gte: startDate, $lte: endDate },
     }).populate("participants");
-    console.log(appointments)
+    console.log(appointments);
     return res.status(200).json({
       status: "success",
       appointments,
-    }); 
+    });
   } catch (error) {
     console.error(error);
     if (error instanceof Error && error.name === "JsonWebTokenError") {
