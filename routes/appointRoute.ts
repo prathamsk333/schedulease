@@ -22,6 +22,12 @@ router.get(
   appointController.getAllAppoint
 );
 
+router.get(
+  "/getOneAppointment/:id",
+  authController.protect,
+  appointController.getOneAppointment
+);
+
 router.delete(
   "/deleteAppoint/:id",
   authController.protect,

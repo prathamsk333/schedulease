@@ -91,7 +91,7 @@ export const addNewAppointments = catchAsync(async (req, res) => {
   }
 
   try {
-    const decoded: any = jwt.verify(token, JWT_SECRET);
+    const decoded: any = jwt.verify(token, JWT_SECRET);               
     const userId = decoded.id;
 
     await Participant.create({ userID: userId, appointmentId: appointment });
@@ -170,3 +170,13 @@ export const listAppointments = async (
     return res.status(500).json({ message: "Failed to fetch appointments" });
   }
 };
+
+export const getOneAppointment = catchAsync(async (req, res) => {
+  const appoint = await Appointment.findOne({ _id: req.params.id })
+  res.status(200).json({
+    status: "success",
+      data: {
+        appoint,
+      },
+  })
+});

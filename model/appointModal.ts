@@ -12,6 +12,7 @@ interface IAppointment extends Document {
   mode: "online" | "offline";
   location?: string;
   image?: string;
+  coordinates?: string;
   participants: mongoose.Schema.Types.ObjectId[];
 }
 
@@ -53,6 +54,9 @@ const appointmentSchema = new Schema<IAppointment>({
     type: String,
     enum: ["online", "offline"],
     required: true,
+  },  
+  coordinates: {
+    type: String,
   },
   location: {
     type: String,
