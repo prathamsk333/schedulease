@@ -86,12 +86,12 @@ export const addNewAppointments = catchAsync(async (req, res) => {
   const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
   const token = (req as AuthenticatedRequest).user?.token;
 
-  if (!token) {
+  if (!token) { 
     return res.status(400).json({ message: "Token must be provided" });
   }
 
   try {
-    const decoded: any = jwt.verify(token, JWT_SECRET);               
+    const decoded: any = jwt.verify(token, JWT_SECRET);
     const userId = decoded.id;
 
     await Participant.create({ userID: userId, appointmentId: appointment });
@@ -172,11 +172,11 @@ export const listAppointments = async (
 };
 
 export const getOneAppointment = catchAsync(async (req, res) => {
-  const appoint = await Appointment.findOne({ _id: req.params.id })
+  const appoint = await Appointment.findOne({ _id: req.params.id });
   res.status(200).json({
     status: "success",
-      data: {
-        appoint,
-      },
-  })
+    data: {
+      appoint,
+    },
+  });
 });

@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import userRouter from "./routes/userRoute";
 import appointRouter from './routes/appointRoute';
 import cors from 'cors'
+import rateLimit from "express-rate-limit";
 
 dotenv.config({ path: "./config.env" });
 const app = express();
@@ -15,6 +16,16 @@ app.use(cors({
 }));
 
 app.use(express.json());
+//------------------------security----------------------------------------//
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 100, 
+  legacyHeaders: false,
+});
+              
+app.use(limiter);
+
+app.use(express.json({ limit: '10mb' }));
 //-------------------------DB connection-----------------------------------------//
 console.log(process.env.DATABASE);
 const DB =
