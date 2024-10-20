@@ -65,7 +65,7 @@ export const postAppoint = catchAsync(async (req, res, next) => {
     data: {
       appointment: newAppointment,
     },
-  });
+  }); 
 });
 
 export const deleteAppoint = catchAsync(async (req, res, next) => {

@@ -177,7 +177,7 @@ export const forgotPassword = catchAsync(
 
     const resetToken: string = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
-
+    console.log(resetToken)
     const resetURL = `${process.env.FROND_URL}/resetPassword/${resetToken}`;
 
     try {
@@ -201,6 +201,7 @@ export const forgotPassword = catchAsync(
 );
 
 export const resetPassword = catchAsync(async (req, res, next) => {
+  console.log(req.body)
   const hashedToken = crypto
     .createHash("sha256")
     .update(req.params.token)
@@ -221,7 +222,7 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   user.password = req.body.password;
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
-  await user.save();
+  await user.save({ validateBeforeSave: false });
 
   createSendToken(user, 200, res);
 });

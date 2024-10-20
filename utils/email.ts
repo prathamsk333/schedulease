@@ -70,7 +70,7 @@ export default class Email {
           cid: "logoImage",
         },
       ],
-    };
+    };      
 
     await this.newTransport().sendMail(mailOptions);
   }
