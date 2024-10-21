@@ -46,7 +46,7 @@ const createSendToken = async (
     status: "success",
     token,
     data: {
-      user:newUser,
+      user: newUser,
     },
   });
 };
@@ -85,7 +85,8 @@ export const signup = catchAsync(
 
     const url: string = process.env.FROND_URL || "";
 
-    await new Email(newUser, url).sendWelcome();
+    const rest = await new Email(newUser, url).sendWelcome();
+    console.log(rest);
 
     await createSendToken(newUser, 201, res);
   }
@@ -177,7 +178,7 @@ export const forgotPassword = catchAsync(
 
     const resetToken: string = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
-    console.log(resetToken)
+    console.log(resetToken);
     const resetURL = `${process.env.FROND_URL}/resetPassword/${resetToken}`;
 
     try {
@@ -201,7 +202,7 @@ export const forgotPassword = catchAsync(
 );
 
 export const resetPassword = catchAsync(async (req, res, next) => {
-  console.log(req.body)
+  console.log(req.body);
   const hashedToken = crypto
     .createHash("sha256")
     .update(req.params.token)

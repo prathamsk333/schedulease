@@ -46,4 +46,10 @@ router.post(
   appointController.addNewAppointments
 );
 
+router.get(
+  "/listAppointmentsCreated",
+  authController.protect,
+  appointController.listAppointmentsCreated
+);
+
 export default router;

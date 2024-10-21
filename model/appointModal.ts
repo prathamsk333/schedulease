@@ -22,8 +22,8 @@ const appointmentSchema = new Schema<IAppointment>({
     required: true,
   },
   user: {
-    type: mongoose.Schema.ObjectId,
-    ref: "User",
+    type: String,
+    required: true,
   },
   date: {
     type: Date,
@@ -54,7 +54,7 @@ const appointmentSchema = new Schema<IAppointment>({
     type: String,
     enum: ["online", "offline"],
     required: true,
-  },  
+  },
   coordinates: {
     type: String,
   },

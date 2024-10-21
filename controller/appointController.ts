@@ -4,6 +4,8 @@ import { Request, Response } from "express";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
+import Participant from "../model/participantModal";
 
 dotenv.config({ path: "./config.env" });
 
@@ -14,10 +16,9 @@ const randomImageName = (bytes = 32) => {
 interface AuthenticatedRequest extends Request {
   user?: {
     token: string;
+    _id: string;
   };
 }
-import jwt from "jsonwebtoken";
-import Participant from "../model/participantModal";
 
 const accessKey = process.env.AWS_ACCESS_KEY_ID;
 const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
@@ -44,6 +45,12 @@ export const getAllAppoint = catchAsync(async (req, res, next) => {
 export const postAppoint = catchAsync(async (req, res, next) => {
   req.body.token = (req as AuthenticatedRequest).user?.token;
 
+  const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
+
+  const decoded: any = jwt.verify(req.body.token, JWT_SECRET);
+  const userId = decoded.id;
+  req.body.user = userId;
+
   const imageName = randomImageName();
 
   const params = {
@@ -65,16 +72,16 @@ export const postAppoint = catchAsync(async (req, res, next) => {
     data: {
       appointment: newAppointment,
     },
-  }); 
+  });
 });
 
 export const deleteAppoint = catchAsync(async (req, res, next) => {
-  const appointment = await Appointment.findByIdAndDelete(req.params.id);
+  const appointment = await Appointment.findOneAndDelete({userID: req.user?._id, appointmentId: req.params.id});
   if (!appointment) {
     return res
       .status(404)
       .json({ status: "fail", message: "No appointment found with that ID" });
-  }
+  }     
   res.status(204).json({
     status: "success",
     data: null,
@@ -86,7 +93,7 @@ export const addNewAppointments = catchAsync(async (req, res) => {
   const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
   const token = (req as AuthenticatedRequest).user?.token;
 
-  if (!token) { 
+  if (!token) {
     return res.status(400).json({ message: "Token must be provided" });
   }
 
@@ -180,3 +187,17 @@ export const getOneAppointment = catchAsync(async (req, res) => {
     },
   });
 });
+
+export const listAppointmentsCreated = catchAsync(
+  async (req: AuthenticatedRequest, res: Response) => {
+    console.log(req.user?._id)
+    const appointCreated = await Appointment.find({ user: req.user?._id });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        appointCreated,
+      },
+    });
+  }
+);
