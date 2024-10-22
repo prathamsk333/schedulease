@@ -6,6 +6,8 @@ import dotenv from "dotenv";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import Participant from "../model/participantModal";
+import mongoose from "mongoose";
+import User from "../model/userModal";
 
 dotenv.config({ path: "./config.env" });
 
@@ -75,18 +77,27 @@ export const postAppoint = catchAsync(async (req, res, next) => {
   });
 });
 
-export const deleteAppoint = catchAsync(async (req, res, next) => {
-  const appointment = await Appointment.findOneAndDelete({userID: req.user?._id, appointmentId: req.params.id});
-  if (!appointment) {
-    return res
-      .status(404)
-      .json({ status: "fail", message: "No appointment found with that ID" });
-  }     
-  res.status(204).json({
-    status: "success",
-    data: null,
-  });
-});
+export const deleteAppoint = catchAsync(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user?._id.toString();
+    const appointmentId = new mongoose.Types.ObjectId(req.params.id);
+    console.log(appointmentId);
+    console.log(userId);
+    const appointment = await Appointment.findOneAndDelete({
+      user: userId,
+      _id: appointmentId,
+    });
+    if (!appointment) {
+      return res
+        .status(404)
+        .json({ status: "fail", message: "No appointment found with that ID" });
+    }
+    res.status(204).json({
+      status: "success",
+      data: null,
+    });
+  }
+);
 
 export const addNewAppointments = catchAsync(async (req, res) => {
   const { appointment } = req.body;
@@ -178,19 +189,44 @@ export const listAppointments = async (
   }
 };
 
-export const getOneAppointment = catchAsync(async (req, res) => {
-  const appoint = await Appointment.findOne({ _id: req.params.id });
-  res.status(200).json({
-    status: "success",
-    data: {
-      appoint,
-    },
-  });
-});
+export const getOneAppointment = catchAsync(
+  async (req: AuthenticatedRequest, res) => {
+    const appoint = await Appointment.findById(req.params.id); // Changed to findById for clarity
+
+    if (!appoint) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Appointment not found",
+      });
+    }
+    
+    const participants = await Participant.find({
+      appointmentId: req.params.id,
+    });
+
+    const users = await User.find({
+      _id: { $in: participants.map((p) => p.userID) },
+    });
+
+    const participantDetails = users.map((u) => ({
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+    }));
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        appoint,
+        participants: participantDetails,
+      },
+    });
+  }
+);
 
 export const listAppointmentsCreated = catchAsync(
   async (req: AuthenticatedRequest, res: Response) => {
-    console.log(req.user?._id)
+    console.log(req.user?._id);
     const appointCreated = await Appointment.find({ user: req.user?._id });
 
     res.status(200).json({
