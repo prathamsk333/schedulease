@@ -35,7 +35,7 @@ router.delete(
 );
 
 router.get( 
-  "/listAppointments",
+  "/listAppointments/:filter",
   authController.protect,
   appointController.listAppointments
 );
