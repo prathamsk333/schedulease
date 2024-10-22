@@ -34,8 +34,8 @@ router.delete(
   appointController.deleteAppoint
 );
 
-router.get(
-  "/listAppointments/:filter",
+router.get( 
+  "/listAppointments",
   authController.protect,
   appointController.listAppointments
 );
